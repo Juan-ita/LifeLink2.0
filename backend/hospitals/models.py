@@ -19,6 +19,9 @@ class HospitalProfile(models.Model):
     # Hospital email
     email  = models.EmailField()
 
+    # Phone
+    phone = models.CharField(max_length=20, blank=True)
+
     # Physical address
     address = models.CharField(max_length=255)
 

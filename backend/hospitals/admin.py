@@ -5,11 +5,11 @@ from .models import HospitalProfile
 @admin.register(HospitalProfile)
 class HospitalProfileAdmin(admin.ModelAdmin):
     # Display important hospital information in the hospital list
-    list_diaplay = (
+    list_display = (
         "hospital_name",
         "registration_number",
         "phone",
-        "email"
+        "email",
         "is_verified",
         "created_at",
     )
