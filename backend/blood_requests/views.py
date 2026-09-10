@@ -4,7 +4,7 @@ from .serializers import BloodRequestSerializer
 from rest_framework import viewsets
 
 # Create your views here.
-class bloodRequestViewSet(viewsets.ModelViewSet):
+class BloodRequestViewSet(viewsets.ModelViewSet):
 
     # Get all blood requests
     queryset = BloodRequest.objects.all().order_by("-created_at")
