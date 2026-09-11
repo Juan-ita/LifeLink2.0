@@ -27,4 +27,7 @@ urlpatterns = [
     # Get a new access token using the refresh token
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/", include("blood_requests.urls")),
+
+    # Donor matching
+    path("api/", include("matching.urls"),)
 ]

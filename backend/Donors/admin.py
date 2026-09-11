@@ -12,7 +12,7 @@ class DonorProfileAdmin(admin.ModelAdmin):
         "phone",
         'is_available',
         "last_donation_date",
-        "next_eligible_donation",
+        "next_eligible_date",
     )
 
     # Allow admin users to filter donors by these fields

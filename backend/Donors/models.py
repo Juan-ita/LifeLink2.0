@@ -29,7 +29,7 @@ class DonorProfile(models.Model):
     )
 
     # Date from which the donor can next be considered to donate
-    next_eligible_donation = models.DateField(
+    next_eligible_date = models.DateField(
         null=True,
         blank=True,
     )
