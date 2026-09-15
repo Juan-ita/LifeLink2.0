@@ -92,6 +92,23 @@ class DonorMatchingView(APIView):
 
         for donor in matching_donors.distinct():
 
+            # Calculate the donor's distance from the hospital
+            distance = None
+
+            # Only calculate didtance when both Locations are available
+            if(
+                donor.latitude is not None
+                and donor.longitude is not None
+                and blood_request.hospital.latitude is not None
+                and blood_request.hospital.longitude is not None
+            ):
+                distance = claculate_distance(
+                    donor.latitude,
+                    donor.longitude,
+                    blood_request.hospital.latitude,
+                    blood_request.hospital.longitude,
+                )
+
             # Start the donor's score at zero
             score = 0
 
@@ -117,6 +134,7 @@ class DonorMatchingView(APIView):
                 "phone":donor.phone,
                 "is_available":donor.is_available,
                 "match_score":score,
+                "distance_km": round(distance, 2) if distance is not None else None,
             })
 
         # Return matching donor
