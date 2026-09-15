@@ -5,6 +5,8 @@ from .models import Appointment
 from .serializers import AppointmentSerializer
 from .permissions import IsHospitalOrDonor
 
+from notifictions.models import Notification
+
 
 class AppointmentViewSet(viewsets.ModelViewSet):
 
@@ -34,3 +36,21 @@ class AppointmentViewSet(viewsets.ModelViewSet):
 
         # Other roles should see nothing
         return Appointment.objects.none()
+
+    def perform_create(self, serializer):
+
+        # Save the new appointment
+        appointment = serializer.save()
+
+        # Get the donor who is attending
+        donor = appointment.donor
+
+        # Create a notification for the donor
+        Notification.objects.create(
+            user = donor.user,
+            notification_type = Notification.NotificationType.APPOINTMENT,
+            message = (
+                f"You have a new blood donation appointment at"
+                f"{appointment.hospital.hospital_name}"
+            )
+        )

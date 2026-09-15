@@ -32,5 +32,8 @@ urlpatterns = [
     path("api/", include("matching.urls")),
 
     # Appointment API
-    path("api/", include("appointment.urls"))
+    path("api/", include("appointment.urls")),
+
+    # Notification API
+    path("api/", include("notifictions.urls")),
 ]
