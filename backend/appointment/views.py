@@ -3,7 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from .models import Appointment
 from .serializers import AppointmentSerializer
-from .permissions import IsHospitalUser
+from .permissions import IsHospitalOrDonor
 
 
 class AppointmentViewSet(viewsets.ModelViewSet):
@@ -15,4 +15,22 @@ class AppointmentViewSet(viewsets.ModelViewSet):
     serializer_class = AppointmentSerializer
 
     # Only logged-in users can access appointments
-    permission_classes = [IsHospitalUser]
+    permission_classes = [IsHospitalOrDonor]
+
+    def get_queryset(self):
+
+        # Get the current logged in user
+        user = self.request.user
+
+        # Hospital users can see all appointments
+        if user.role == "HOSPITAL":
+            return Appointment.objects.all().order_by("-created__at")
+
+        # Donor can only see their own appointments
+        if user.role == "DONOR":
+            return Appointment.objects.filter(
+                donor__user=user
+            ).order_by("-created_at")
+
+        # Other roles should see nothing
+        return Appointment.objects.none()
