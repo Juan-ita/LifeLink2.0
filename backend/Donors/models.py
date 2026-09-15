@@ -19,6 +19,17 @@ class DonorProfile(models.Model):
     # Phone number
     phone = models.CharField(max_length=20)
 
+    # GPS coordinates showing the donor's approximate location
+    latitude = models.FloatField(
+        null=True,
+        blank=True,
+    )
+
+    longitude = models.FloatField(
+        null=True,
+        blank=True,
+    )
+
     # Whether the donor is currently willing to recieve donation requests
     is_available = models.BooleanField(default = True)
 

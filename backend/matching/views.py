@@ -4,6 +4,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
+from math import radians, sin, cos, sqrt, atan2
+
 from Donors.models import DonorProfile
 from blood_requests.models import BloodRequest
 
@@ -20,6 +22,31 @@ BLOOD_COMPATIBILITY = {
     "AB-": ["O-", "A-", "B-", "AB-"],
     "AB+": ["O-", "O+", "A-", "A+", "B-", "B+", "AB-", "AB+"],
 }
+
+#Haversine formula.
+def claculate_distance(lat1, lon1, lat2, lon2):
+
+    # Radius of earth in km
+    earth_radius = 6371
+
+    # Donor (lat1, lon2) Hospital (lat2, lon2)
+
+    # covert lat and long from degrees to radiants
+    lat1 = radians(lat1)
+    lat2 = radians(lat2)
+    lon1 = radians(lon1)
+    lon2 = radians(lon2)
+
+    # Difference between the coordinates (distance between the donor and the hospital)
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+
+    # Haversine formula
+    a = (sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon /2) ** 2)
+
+    c = 2 * atan2(sqrt(a), sqrt(1-a))
+
+    return earth_radius * c
 
 
 # Create your views here.

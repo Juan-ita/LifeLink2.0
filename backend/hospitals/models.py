@@ -25,6 +25,17 @@ class HospitalProfile(models.Model):
     # Physical address
     address = models.CharField(max_length=255)
 
+    # GPS coordinates showing the hospital's location
+    latitude = models.FloatField(
+        null=True,
+        blank=True,
+    )
+    
+    longitude = models.FloatField(
+         null=True,
+         blank=True,
+     )
+
     # Wheter an administrator has verified the hospital
     is_verified = models.BooleanField(default=False)
 
