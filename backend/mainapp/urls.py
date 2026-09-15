@@ -29,5 +29,8 @@ urlpatterns = [
     path("api/", include("blood_requests.urls")),
 
     # Donor matching
-    path("api/", include("matching.urls"),)
+    path("api/", include("matching.urls")),
+
+    # Appointment API
+    path("api/", include("appointment.urls"))
 ]
