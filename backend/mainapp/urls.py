@@ -39,4 +39,7 @@ urlpatterns = [
 
     # Blood Inventory
     path("api/", include("inventory.urls")),
+
+    # Analytics
+    path("api/", include("analytics.urls"))
 ]
