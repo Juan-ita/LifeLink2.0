@@ -26,7 +26,9 @@ class AppointmentViewSet(viewsets.ModelViewSet):
 
         # Hospital users can see all appointments
         if user.role == "HOSPITAL":
-            return Appointment.objects.all().order_by("-created__at")
+            return Appointment.objects.filter(
+                hospital_user=user
+            ).order_by("-created_at")
 
         # Donor can only see their own appointments
         if user.role == "DONOR":

@@ -3,7 +3,8 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 
 from .models import Notification
-from .serializers import NotificationSerializers
+from .serializers import NotificationSerializer
+from rest_framework.exceptions import PermissionDenied
 
 # Create your views here.
 class NotificationViewSet(viewsets.ModelViewSet):
@@ -12,7 +13,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
     queryset = Notification.objects.all().order_by("-created_at")
 
     # Convert notifications into JSON
-    serializer_class = NotificationSerializers
+    serializer_class = NotificationSerializer
 
     # Only logged-in users can access notifications
     permission_classes = [IsAuthenticated]
@@ -27,7 +28,21 @@ class NotificationViewSet(viewsets.ModelViewSet):
             user=user
         ).order_by("-created_at")
 
+    def perform_create(self, serializer):
+        # Notifications are created by the system
+        raise PermissionDenied(
+            "Notifications are created automatically by the system."
+        )
+
+
     def perform_update(self, serializer):
 
         # Save changes such as marking a notification as read
         serializer.save()
+
+    def destroy(self, request, *args, **kwargs):
+
+        #Users should not delete system notifications
+        raise PermissionDenied(
+            "Notifations cannot be deleted."
+        )

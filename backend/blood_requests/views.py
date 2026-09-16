@@ -40,4 +40,29 @@ class BloodRequestViewSet(viewsets.ModelViewSet):
         # Create and return the permission objects
         return [permission() for permission in self.permission_classes]
 
+    # Control which blood requests each role can see
+    def get_queryset(self):
+
+        user = self.request.user
+
+        # Admin can see all blood requests
+        if user.role == "ADMIN":
+            return BloodRequest.objects.all().order_by("-created_at")
+
+        # Requesters can only see requests they created
+        if user.role == "REQUESTER":
+            return BloodRequest.objects.filter(
+                requester=user
+            ).order_by("-created_at")
+
+        # Hospitals can only see requests assigned to their hospital
+        if user.role == "HOSPITAL":
+            return BloodRequest.objects.filter(
+                hospital__user=user
+            ).order_by("-created_at")
+
+        # Donors should not access blood requests here
+        return BloodRequest.objects.none()
+
+
 
