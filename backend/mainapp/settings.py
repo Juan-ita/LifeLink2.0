@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'matching',
     'appointment',
     'notifictions',
+    'inventory',
 ]
 
 MIDDLEWARE = [

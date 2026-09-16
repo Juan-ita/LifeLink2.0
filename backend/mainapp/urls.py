@@ -36,4 +36,7 @@ urlpatterns = [
 
     # Notification API
     path("api/", include("notifictions.urls")),
+
+    # Blood Inventory
+    path("api/", include("inventory.urls")),
 ]
