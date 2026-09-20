@@ -41,5 +41,8 @@ urlpatterns = [
     path("api/", include("inventory.urls")),
 
     # Analytics
-    path("api/", include("analytics.urls"))
+    path("api/", include("analytics.urls")),
+
+    # Users
+    path("api/", include("users.urls")),
 ]
