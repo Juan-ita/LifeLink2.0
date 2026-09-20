@@ -3,17 +3,19 @@ import { useState } from "react"
 import { Link } from "react-router-dom"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { signInWithPopup } from "firebase/auth"
+// import { signInWithPopup } from "firebase/auth"
 import { useNavigate } from "react-router-dom"
-import { signInWithEmailAndPassword } from "firebase/auth"
-import { auth, googleProvider, db } from "@/firebase/FirebaseConfig"
+// import { signInWithEmailAndPassword } from "firebase/auth"
+// import { auth, googleProvider, db } from "@/firebase/FirebaseConfig"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
-import { doc, getDoc } from "firebase/firestore"
+// import { doc, getDoc } from "firebase/firestore"
+import api from "../services/api"
 
 function Login() {
-    const [email, setEmail] = useState("");
+    const [username, setUsername] = useState("");
     const[password, setPassword] = useState("")
     const [error, setError] = useState("")
+    const [loading, setLoading] = useState(false)
     const navigate = useNavigate()
     
 
@@ -21,70 +23,50 @@ function Login() {
         event.preventDefault();
         setError("");
 
-        if(email.trim() === ""){
-            setError("Email required.")
+        if(username.trim() === ""){
+            setError("Username required.")
             return;
         }
         if(password.trim() === ""){
             setError("Password is required.")
             return;
         }
-        if(
-            email === "hospital@lifelink.com" &&
-            password === "admin123"
-        ){
-            navigate("/hospital/dashboard")
-            return;
-        }
 
         try{
-            //log the user into firebase authentication
-            const userCredential = await signInWithEmailAndPassword(
-                auth, email, password
-            )
+            setLoading(true)
 
-            //Get the logged-in user
-            const user = userCredential.user;
-            console.log("Logged in UID:", user.uid)
-            console.log("Logged in email:", user.email)
+            // send the login details to django
+            const response = await api.post("token/", {
+                username: username,
+                password: password,
+            })
 
-            //Read the user's information from firebase
-            const userRef = doc(db, "users", user.uid)
+             // Get the JWT token returned by Django
+             const {access, refresh} = response.data
 
-            const userSnap = await getDoc(userRef);
+             // Store the tokens returned by Django
+             localStorage.setItem("access_token", access)
+             localStorage.setItem("refresh_token", refresh)
 
-            //check if the user's information from firestore
-            if (!userSnap.exists()){
-                setError("User profile not found")
-                return;
-            }
+             console.log("Django login successful")
 
-            //get user's information
-            const userData = userSnap.data();
+             // Temporary destination after successful login
+             navigate("/")
 
-            //if the user is a hospital
-            if(userData.role === "hospital"){
-
-                //Open the hospitaldashboard
-                navigate("/hospital/dashboard")
-
-            }else{
-                navigate("/donor/dashboard");
-            }
-        }catch(error) {
-            console.error(error)
-            setError("Invalid email or password.")
-        }
-    }
-
-    async function handleGoogleLogin () {
-        try{
-            const result = await signInWithPopup(auth, googleProvider)
-            console.log(result.user)
         }catch(error){
-            console.log(error)
-            setError(error.message)
+            console.error("Login failed:", error)
+
+            if (error.response?.status === 401){
+                setError("Invalid username or password.")
+            } else {
+                setError("Something went wrong. Please try again.")
+            }
+        } finally {
+            setLoading(false)
         }
+
+       
+
     }
   return (
     <main className="flex min-h-screen items-center justify-center bg-red-50 p-6">
@@ -111,14 +93,14 @@ function Login() {
                    
                      {/* Email */}
              <div>
-                  <Label htmlFor="email"> Email</Label>
+                  <Label htmlFor="username"> Username</Label>
                   <Input
                    className="mt-2"
-                   id="email"
-                   type="email"
-                   placeholder="@gmail.com"
-                   value={email}
-                   onChange={(event) => setEmail(event.target.value)}/>
+                   id="username"
+                   type="text"
+                   placeholder="Enter username"
+                   value={username}
+                   onChange={(event) => setUsername(event.target.value)}/>
              </div>
 
           {/* Password */}
@@ -132,8 +114,11 @@ function Login() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}/>
           </div>
-             <Button type="submit" className="w-full mt-3">
-                Login
+             <Button type="submit" 
+             className="w-full mt-3"
+             disabled={loading}
+             >
+                {loading ? "Logging in ..." : "Login"}
              </Button>
              
 
@@ -152,7 +137,6 @@ function Login() {
                 <hr className="flex-1"/>
              </div>
 
-             <Button variant="outline" className="w-full" onClick={handleGoogleLogin}>Continue with Goolge</Button>
                 </form>
                
             </CardContent>

@@ -20,7 +20,6 @@ import HospitalDonors from './components/hospital/HospitalDonors'
 import HospitalNotifications from './components/hospital/HospitalNotifications'
 import DonorProfile from './components/donor/DonorProfile'
 import About from './components/About'
-// import RegistrationSuccess from './pages/RegistrationSuccess'
 
 function App() {
   const location = useLocation()
