@@ -50,8 +50,29 @@ function Login() {
 
              console.log("Django login successful")
 
-             // Temporary destination after successful login
-             navigate("/")
+             // Ask Django who just logged in
+             const userResponse = await api.get("me/")
+
+             const user = userResponse.data
+
+             // Store the user's role so other parts of the app can use it
+             localStorage.setItem("user_role", user.role)
+
+             console.log("Logged in user:", user)
+
+             // Send the user to the correct dashboard
+             if (user.role === 'DONOR'){
+                navigate("/donor/dashboard")
+             } else if (user.role === 'HOSPITAL'){
+                navigate("/hospital/dashboard")
+             } else if (user.role === 'REQUESTER'){
+                navigate('/')
+             } else if( user.role === 'ADMIN'){
+                navigate('/hospital/dashboard')
+             } else {
+                navigate('/')
+             }
+            
 
         }catch(error){
             console.error("Login failed:", error)
