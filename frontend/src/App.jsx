@@ -21,6 +21,8 @@ import HospitalNotifications from './components/hospital/HospitalNotifications'
 import DonorProfile from './components/donor/DonorProfile'
 import About from './components/About'
 
+import ProtectedRoute from './components/protection/ProtectedRoute'
+
 function App() {
   const location = useLocation()
   const isHospitalPage = location.pathname.startsWith("/hospital")
@@ -34,12 +36,27 @@ function App() {
           {/* <Route path='/registration-success' element={<RegistrationSuccess/>}/> */}
           <Route path='/login' element={<Login/>}/>
           <Route path='/about' element={<About/>}/>
-          <Route path='/hospital/dashboard' element={<Hospitaldashboard/>}/>
+
+          {/* Only users with the HOSPITAL or ADMIN role can access the hospital dashboard */}
+          <Route 
+             path='/hospital/dashboard'
+              element={<ProtectedRoute allowedRoles={['HOSPITAL', 'ADMIN']}>
+                <Hospitaldashboard/>
+              </ProtectedRoute>}/>
+
+              
           <Route path='/hospital/create-request' element={<CreateRequest/>}/>
           <Route path='/hospital/request/:id' element={<RequestDetails/>}/>
           <Route path='/hospital/request/edit/:id' element={<EditRequest/>}/>
           <Route path='/hospital/inventory' element={<BloodInventory/>}/>
-          <Route path='/donor/dashboard' element={<DonorDashboard/>}/>
+
+          {/* only users with the DONOR role can access the donor dashboard */}
+          <Route 
+              path='/donor/dashboard' 
+              element={<ProtectedRoute allowedRoles={['DONOR']}>
+             <DonorDashboard/>
+          </ProtectedRoute>}/>
+
           <Route path='/donor/requests' element={<AvailableRequests/>}/>
           <Route path='/donor/book/:id' element={<BookAppointment/>}/>
           <Route path='/hospital/appointments' element={<HospitalAppointments/>}/>
