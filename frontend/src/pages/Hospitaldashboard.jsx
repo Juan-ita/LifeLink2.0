@@ -4,8 +4,8 @@ import { Calendar, Droplets, ClipboardList, Users } from 'lucide-react'
 import QuickActions from '@/components/hospital/QuickActions'
 import RecentRequests from '@/components/hospital/RecentRequests'
 import { useState, useEffect } from 'react'
-import { collection, getDocs, doc, getDoc } from 'firebase/firestore'
-import { db, auth } from '@/firebase/FirebaseConfig'
+
+import api from '@/services/api'
 
 function Hospitaldashboard() {
 
@@ -19,66 +19,38 @@ function Hospitaldashboard() {
   });
 
   //Run once when the dashboard loads
-  useEffect(()=>{
-    async function fetchStatus (){
-      try{
-        //get all blood requests
-        const requestsSnapshot = await getDocs(
-          collection(db, "bloodRequests")
-        );
-        //Get all blood inventory
-        const inventorySnapshot = await getDocs(
-          collection(db, "bloodInventory")
-        );
-        const usersSnapshot = await getDocs(
-          collection(db, "users")
-        )
-        const appointmentsSnapshot = await getDocs(
-          collection(db, "appointments")
-        )
-        //variable to store total blood units
-        let totalUnits = 0;
+useEffect(() => {
+    async function fetchStatus() {
+        try {
+            // Ask Django for the hospital dashboard statistics.
+            const response = await api.get("analytics/");
 
-        //loop through every inventory document
-        inventorySnapshot.forEach((doc) => {
+            // Store the statistics returned by Django.
+            setStatus({
+                donors: response.data.total_donors,
+                requests: response.data.total_requests,
+                units: response.data.total_inventory_units,
+                appointments: response.data.total_appointments,
+            });
 
-          //Add the units from each document
-          totalUnits += Number(doc.data().units|| 0);
-        })
-        //count only users whose role in donor
-        const donorCount = usersSnapshot.docs.filter(
-          (doc)=>doc.data().role === "donor"
-        ).length
+            // Get the currently logged-in user.
+            const userResponse = await api.get("me/");
 
+            // Display the logged-in hospital's username.
+            setHospitalName(userResponse.data.username);
 
-       //Read hospital profile
-        const hospitalRef = doc(db, "users", auth.currentUser.uid)
-        const hospitalSnap = await getDoc(hospitalRef);
+        } catch (error) {
+            console.error("Failed to load hospital dashboard:", error);
 
-        if(hospitalSnap.exists()){
-          setHospitalName(hospitalSnap.data().hospitalName)
+            if (error.response?.data) {
+                console.error("Django error:", error.response.data);
+            }
         }
-
-
-        //update the dashboard cards
-        setStatus({
-          donors: donorCount,
-
-          //Number of vlood requests
-          requests: requestsSnapshot.size,
-
-          //total blood units available
-          units: totalUnits,
-
-          appointments: appointmentsSnapshot.size,
-        })
-      } catch(error){
-        console.error(error);
-      }
     }
-    //call the function
-    fetchStatus()
-  }, [])
+
+    fetchStatus();
+}, []);
+
   return (
     
     <div className='flex min-h-screen bg-gray-100'>

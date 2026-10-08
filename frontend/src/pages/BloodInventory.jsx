@@ -1,48 +1,57 @@
 import HospitalLayout from '@/components/hospital/HospitalLayout'
 import { useState } from 'react'
-import { collection, addDoc } from 'firebase/firestore'
-import { db } from '@/firebase/FirebaseConfig'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import InventoryTable from '@/components/hospital/InventoryTable'
 
+import api from '@/services/api'
+
 function BloodInventory() {
   const [bloodGroup, setBloodGroup] = useState("")
   const [units, setUnits] = useState("")
   const [expiryDate, setExpiryDate] = useState("")
 
-  async function handleSubmit(event){
+  async function handleSubmit(event) {
     event.preventDefault();
 
-    if(
-      bloodGroup.trim() === "" ||
-      units.trim() === "" ||
-      expiryDate.trim() === ""
-    ){
-      alert("Please fill in all fields.");
-      return;
+    if (
+        bloodGroup.trim() === "" ||
+        units.trim() === ""
+    ) {
+        alert("Please fill in all required fields.");
+        return;
     }
-    try{
-      await addDoc(collection(db, "bloodInventory"),{
-        bloodGroup,
-        units: Number(units),
-        expiryDate,
-        status: "Available",
-        createdAt: new Date(),
-      })
-      alert("Blood added successfully!");
 
-      setBloodGroup("")
-      setUnits("")
-      setExpiryDate("")
+    try {
+        // Send the inventory information to Django.
+        await api.post("inventory/", {
+            blood_group: bloodGroup.toUpperCase(),
+            units_available: Number(units),
+            expiry_date: expiryDate,
+        });
 
-    } catch(error){
-      console.error(error);
-      alert("Something went wrong.")
+        alert("Blood added successfully!");
+
+        // Clear the form.
+        setBloodGroup("");
+        setUnits("");
+        setExpiryDate("");
+
+    } catch (error) {
+        console.error("Failed to add inventory:", error);
+
+        if (error.response?.data) {
+            console.error("Django error:", error.response.data);
+        }
+
+        alert("Something went wrong while adding inventory.");
     }
-  }
+}
+
+  
+
   return (
     <HospitalLayout>
       <h1 className='text-3xl font-bold'>
@@ -101,6 +110,7 @@ function BloodInventory() {
        <InventoryTable/>
     </HospitalLayout>
   )
-}
+  }
+
 
 export default BloodInventory

@@ -1,7 +1,3 @@
-// Firebase functions
-import { collection, addDoc } from 'firebase/firestore';
-// firebade data
-import { db } from '@/firebase/FirebaseConfig';
 import { useState } from 'react'
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -9,11 +5,12 @@ import { Label } from '../ui/label';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import HospitalLayout from './HospitalLayout';
-import Sidebar from './Sidebar';
+
+import api from '@/services/api';
 
 function CreateRequest() {
     const[county, setCounty] = useState("")
-    const[deadline, setDedline] = useState("")
+    const[deadline, setDeadline] = useState("")
     const [patientName, setPatientName] = useState("")
     const[bloodGroup, setBloodGroup] = useState("")
     const[units, setUnits] = useState("")
@@ -21,22 +18,8 @@ function CreateRequest() {
 
     const navigate = useNavigate()
 
-    async function handleSubmit(event){
+async function handleSubmit(event){
     event.preventDefault();
-    try{
-        await addDoc(collection(db, "bloodRequests"), {
-        patientName,
-        bloodGroup,
-        units,
-        urgency,
-        county,
-        deadline,
-        status: urgency,
-
-        //Save the date the request was created
-        createdAt: new Date(),
-        });
-
         // Error messages
 if(patientName.trim()===""){
     alert("Patient name is required.")
@@ -63,26 +46,52 @@ if(deadline.trim() ===""){
     return
 }
 
-        //Let the user know it works
-        alert("Blood request created successfully!")
+try{
+     // Send the blood request to our Django backend.
+    // The hospital is identified automatically from the logged-in hospital account.
+    await api.post("blood-requests/", {
 
-        //Clear form
-        setPatientName("")
-        setBloodGroup("")
-        setUnits("")
-        setUrgency("")
-        setCounty("")
-        setDedline("")
+        //Blood group requested by the patient
+        blood_group: bloodGroup.toUpperCase(),
 
-        navigate("/hospital/dashboard")
+        // Convert the units from text to a number
+        units_required: Number(units),
+
+        // Django expects NORMAL, URGENCY, CRITICAL
+        urgency: urgency.toUpperCase(),
+
+        // Store the extra form information in the request reason
+        reason: `Patient: ${patientName}. County: ${county}. Deadline: ${deadline}.`,
+    })
+
+    // Let the user know the request was created
+    alert("Blood request created successfully!");
+
+    // Clear the form
+    setPatientName("");
+    setBloodGroup("");
+    setUnits("");
+    setUrgency("");
+    setCounty("")
+    setDeadline("");
+
+    // Reset the form fields to their empty values.
+    event.target.reset();
+
+    // Return to the dashboard
+    navigate('/hospital/dashboard')
 
     }catch(error){
-        console.error(error)
-        alert("Something went wrong.")
-        return;
-    }
-}
+        // Show the full error in the browser console
+        console.error("Failed to create blood request:", error);
 
+        // Show a userful message to the user
+        if(error.response?.data){
+            console.error("Django error:", error.response.data);
+    }
+    alert("Something went wrong while creating the blood request.")
+}
+}
 
 
   return (
@@ -151,7 +160,7 @@ if(deadline.trim() ===""){
                     <Input 
                     type="date"
                     value={deadline}
-                    onChange={(event) => setDedline(event.target.value)}
+                    onChange={(event) => setDeadline(event.target.value)}
                     />
                 </div>
 

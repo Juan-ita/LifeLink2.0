@@ -15,10 +15,14 @@ class BloodRequest(models.Model):
         FULFILLED = "FULFILLED" , "Fulfilled"
         CANCELLED = "CANCELLED" , "Cancelled"
     
-    # Person who created the blood request
+    # Optional requester.
+    # The main blood request is created by a hospital.
+    # We keep this field for flexibility and existing records.
     requester = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
+        null=True,
+        blank=True,
         related_name = "blood_requests"
     )
     
@@ -29,7 +33,7 @@ class BloodRequest(models.Model):
         related_name="blood_requests"
     )
     
-    # Blod group required
+    # Blood group required
     blood_group = models.CharField(max_length=5)
     
     # Number of blood units required

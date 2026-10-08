@@ -1,49 +1,62 @@
 import { Button } from '../ui/button'
 import { useEffect, useState } from 'react'
-import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore'
-import { db } from '@/firebase/FirebaseConfig'
 import { useNavigate } from 'react-router-dom'
-import { tr } from 'date-fns/locale';
 import { Input } from '../ui/input'
+import api from '@/services/api'
 
 function RecentRequests() {
     const [requests, setRequests] = useState([]);
     const navigate= useNavigate();
     const [search, setSearch] = useState("")
 
-    useEffect(()=>{
-        async function fetchRequests(){
-            const querySnapshot = await getDocs( //getDocs reads every document in the bloodRequests collection
-                collection(db, "bloodRequests")
-            );
+     
+    useEffect(() => {
+    async function fetchRequests() {
+        try {
+            // Get blood requests from our Django backend.
+            const response = await api.get("blood-requests/");
 
-            const data = querySnapshot.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data()//doc.data gets the data inside each document
-            }));
-            setRequests(data); //stores the results in state
-        }
-        fetchRequests()
-    }, [])
+            // Save the requests returned by Django.
+            setRequests(response.data);
 
-    async function handleDelete(id){
-        if (!window.confirm("Are you sure u want to delete this request?")){
-            return
-        }
-        try{
-            //Delete the document from firebase
-            await deleteDoc(doc(db, "bloodRequests", id)) //doc(------) points the specific document inside the bloodRequests collection.
+        } catch (error) {
+            console.error("Failed to load blood requests:", error);
 
-            //Remove the deleted request from the table
-            setRequests(
-                requests.filter((request) => request.id !== id) //updates the table immediately without refreshing the page
-            )
-            alert("Blood request deleted successfully!")
-        }catch(error){
-            console.error(error)
-            alert("Failed to delete rwquest.")
+            if (error.response?.data) {
+                console.error("Django error:", error.response.data);
+            }
         }
     }
+
+    fetchRequests();
+    }, []);
+
+    async function handleDelete(id) {
+    if (!window.confirm("Are you sure you want to delete this request?")) {
+        return;
+    }
+
+    try {
+        // Delete the blood request from Django.
+        await api.delete(`blood-requests/${id}/`);
+
+        // Remove the deleted request from the screen.
+        setRequests(
+            requests.filter((request) => request.id !== id)
+        );
+
+        alert("Blood request deleted successfully!");
+
+    } catch (error) {
+        console.error("Failed to delete request:", error);
+
+        if (error.response?.data) {
+            console.error("Django error:", error.response.data);
+        }
+
+        alert("Failed to delete request.");
+    }
+ }
    
   return (
     <div className='mt-10 rounded-xl bg-white p-6 shadow-md'>
@@ -52,7 +65,7 @@ function RecentRequests() {
       </h2>
 
     <Input
-    placeholder = "Search by patient name"
+    placeholder = "Search by blood group"
     value={search}
     onChange = {(e) => setSearch(e.target.value)}
     className="mb-5"
@@ -87,29 +100,30 @@ function RecentRequests() {
                     </td>
                 </tr>
             ):(
-             requests.filter((request)=> request.patientName.toLowerCase().includes(search.toLowerCase()))
+             requests
+               .filter((request)=> 
+                 request.blood_group
+                   .toLowerCase().includes(search.toLowerCase()))
              .map((request) => (
                 <tr 
                 key={request.id}
                 className='border-b'>
 
                     <td className='py-4'>
-                        {request.patientName}
+                        {request.reason}
                     </td>
 
                     <td>
-                        {request.bloodGroup}
+                        {request.blood_group}
                     </td>
 
                     <td>
                        <span className={`rounded-full px-3 py-1 text-sm
                         ${
-                            request.status === "Pending"
+                            request.status === "PENDING"
                             ?"bg-yellow-100 text-yellow-700"
-                            :request.status === "Approved"
+                            :request.status === "APPROVED"
                             ?"bg-green-100 text-green-700"
-                            :request.status === "Urgent"
-                            ?"bg-red-100 text-red-700"
                             :"bg-gray-100 text-gray-700"
                         }`}>
                         {request.status}

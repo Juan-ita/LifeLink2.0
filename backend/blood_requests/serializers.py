@@ -24,4 +24,7 @@ class BloodRequestSerializer(serializers.ModelSerializer):
         read_only_fields = (
             "id",
             "created_at",
+            "requester",
+            "status",
+            "hospital",
         )

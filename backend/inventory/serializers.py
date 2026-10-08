@@ -11,6 +11,7 @@ class BloodInventorySerializer(serializers.ModelSerializer):
             "hospital",
             "blood_group",
             "units_available",
+            "expiry_date",
             "updated_at",
         )
 

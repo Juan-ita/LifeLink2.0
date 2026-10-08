@@ -14,11 +14,13 @@ class BloodInventory(models.Model):
 
     units_available = models.PositiveIntegerField(default=0)
 
+    expiry_date = models.DateField(null=True, blank=True)
+
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return(
-            f"{self.self.hospital.self.hospital_name} -"
+            f"{self.hospital.hospital_name} -"
             f"{self.self.blood_group} -"
             f"{self.units_available} units"
         )

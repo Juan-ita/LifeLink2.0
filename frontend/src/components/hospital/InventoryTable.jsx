@@ -1,48 +1,58 @@
 import React from 'react'
 import { useEffect, useState } from 'react'
-import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore'
-import { db } from '@/firebase/FirebaseConfig'
 import { Button } from '../ui/button'
+
+import api from '@/services/api';
 
 function InventoryTable() {
     const [inventory, setInventory] = useState([]);
 
     useEffect(() => {
-        async function fetchInventory(){
-            try {
-                const querySnapshot = await getDocs(
-                    collection(db, "bloodInventory")
-                );
-                const data = querySnapshot.docs.map((doc) => ({
-                    id: doc.id,
-                    ...doc.data(),
-                }));
-                setInventory(data);
-            } catch(error){
-                console.error(error)
-            }
-        }
+        async function fetchInventory() {
+          try {
+            // Get this hospital's inventory from Django.
+            const response = await api.get("inventory/");
+
+             setInventory(response.data);
+          } catch (error) {
+             console.error("Failed to load inventory:", error);
+
+             if (error.response?.data) {
+                console.error("Django error:", error.response.data);
+          }
+      }
+   }
         fetchInventory();
     }, []);
 
-     async function handleDelete(id){
-            if (!window.confirm("Are you sure u want to delete this request?")){
-                return
-            }
-            try{
-                //Delete the document from firebase
-                await deleteDoc(doc(db, "bloodInventory", id)) //doc(------) points the specific document inside the bloodRequests collection.
-    
-                //Remove the deleted request from the table
-                setInventory(
-                    inventory.filter((request) => request.id !== id) //updates the table immediately without refreshing the page
-                )
-                alert("Inventory deleted successfully!")
-            }catch(error){
-                console.error(error)
-                alert("Failed to delete request.")
-            }
-        }
+
+    async function handleDelete(id) {
+      if (!window.confirm("Are you sure you want to delete this inventory?")) {
+          return;
+      }
+  
+      try {
+          // Delete the inventory record from Django.
+          await api.delete(`inventory/${id}/`);
+  
+          // Remove it from the table immediately.
+          setInventory(
+              inventory.filter((item) => item.id !== id)
+          );
+  
+          alert("Inventory deleted successfully!");
+      } catch (error) {
+          console.error("Failed to delete inventory:", error);
+  
+          if (error.response?.data) {
+              console.error("Django error:", error.response.data);
+          }
+  
+          alert("Failed to delete inventory.");
+      }
+ }
+
+
 
   return (
     <div className='mt-10 rounded-xl bg-white p-6 shadow-md'>
@@ -55,8 +65,7 @@ function InventoryTable() {
             <tr className='border-b'>
                 <th className='py-3 text-left'>Blood Group</th>
                 <th className='py-3 text-left'>Units</th>
-                <th className='py-3 text-left'>Expiry Date</th>
-                <th className='py-3 text-left'>Status</th>
+                <th className='py-3 text-left'>Last Updated</th>
                 <th className='py-3 text-left'>Action</th>
             </tr>
         </thead>
@@ -76,26 +85,20 @@ function InventoryTable() {
                     key={item.id}
                     className='border-b'>
                         <td className='py-4'>
-                            {item.bloodGroup}
+                            {item.blood_group}
                         </td>
 
                         <td>
-                            {item.units}
+                            {item.units_available}
                         </td>
 
                         <td>
-                            {item.expiryDate}
+                            {new Date(item.updated_at).toLocaleString()}
                         </td>
 
-                        <td>
-                            <span className='rounded-full bg-green-100 px-3 py-1 text-sm text-green-700'>
-                                {item.status}
-                            </span>
-
-                           </td> 
                            <div className='flex justify-between mt-2'>
                              <Button variant='outline'
-                        size='sm'>
+                                     size='sm'>
                             Edit
                         </Button>
 
