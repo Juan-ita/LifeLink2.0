@@ -1,29 +1,28 @@
-import React from 'react'
-import { useEffect, useState } from 'react'
+// import React from 'react'
+// import { useEffect, useState } from 'react'
 import { Button } from '../ui/button'
 
 import api from '@/services/api';
 
-function InventoryTable() {
-    const [inventory, setInventory] = useState([]);
+function InventoryTable({inventory, setInventory}) {
 
-    useEffect(() => {
-        async function fetchInventory() {
-          try {
-            // Get this hospital's inventory from Django.
-            const response = await api.get("inventory/");
+//     useEffect(() => {
+//         async function fetchInventory() {
+//           try {
+//             // Get this hospital's inventory from Django.
+//             const response = await api.get("inventory/");
 
-             setInventory(response.data);
-          } catch (error) {
-             console.error("Failed to load inventory:", error);
+//              setInventory(response.data);
+//           } catch (error) {
+//              console.error("Failed to load inventory:", error);
 
-             if (error.response?.data) {
-                console.error("Django error:", error.response.data);
-          }
-      }
-   }
-        fetchInventory();
-    }, []);
+//              if (error.response?.data) {
+//                 console.error("Django error:", error.response.data);
+//           }
+//       }
+//    }
+//         fetchInventory();
+//     }, []);
 
 
     async function handleDelete(id) {

@@ -1,5 +1,5 @@
 import HospitalLayout from '@/components/hospital/HospitalLayout'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -39,6 +39,8 @@ function BloodInventory() {
         setUnits("");
         setExpiryDate("");
 
+        await fetchInventory();
+
     } catch (error) {
         console.error("Failed to add inventory:", error);
 
@@ -48,7 +50,26 @@ function BloodInventory() {
 
         alert("Something went wrong while adding inventory.");
     }
-}
+ }
+
+ const [inventory, setInventory] = useState([]);
+
+ //Fetch inventory records from django
+ async function fetchInventory(){
+  try{
+    const response = await api.get("inventory/");
+    setInventory(response.data);
+
+  } catch(error){
+    console.error("Failed to load inventory:", error);
+  }
+
+ }
+
+ //Fetch inventory when the page firsts loads.
+ useEffect(() => {
+  fetchInventory();
+ }, []);
 
   
 
@@ -107,7 +128,10 @@ function BloodInventory() {
         </CardContent>
        </Card>
 
-       <InventoryTable/>
+       <InventoryTable 
+          inventory ={inventory}
+          setInventory={setInventory}
+          />
     </HospitalLayout>
   )
   }
