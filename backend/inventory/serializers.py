@@ -18,4 +18,5 @@ class BloodInventorySerializer(serializers.ModelSerializer):
         read_only_fields = (
             "id",
             "updated_at",
+            "hospital",
         )

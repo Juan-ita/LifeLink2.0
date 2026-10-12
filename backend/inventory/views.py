@@ -26,4 +26,4 @@ class BloodInventoryViewset(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         # Automatically attach new inventory to the logged-in hospital.
-        serializer.save(hospital=self.request.user.hospitalprofile)
+        serializer.save(hospital=self.request.user.hospital_profile)
