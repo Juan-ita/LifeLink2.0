@@ -74,7 +74,7 @@ function InventoryTable() {
             {inventory.length === 0? (
                 <tr>
                     <td 
-                    colSpan="5"
+                    colSpan="4"
                     className='py-6 text-center text-gray-500'>
                         No Inventory found
                     </td>
@@ -96,6 +96,8 @@ function InventoryTable() {
                             {new Date(item.updated_at).toLocaleString()}
                         </td>
 
+                        <td>
+
                            <div className='flex justify-between mt-2'>
                              <Button variant='outline'
                                      size='sm'>
@@ -110,7 +112,7 @@ function InventoryTable() {
                             Delete
                         </Button>
                            </div>
-                       
+                       </td>
                         
 
                     </tr>

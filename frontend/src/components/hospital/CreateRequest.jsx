@@ -142,7 +142,7 @@ try{
                     <Input 
                     value={urgency}
                     onChange={(event) => setUrgency(event.target.value)}
-                    placeholder="Low"
+                    placeholder="Urgent, Normal, Critical"
                     />
                 </div>
                 <div>

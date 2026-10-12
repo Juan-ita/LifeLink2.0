@@ -13,6 +13,7 @@ function RequestDetails() {
     //store the request
     const[request, setRequest] = useState(null)
 
+
 useEffect(() => {
     async function fetchRequest() {
         try {
@@ -33,11 +34,12 @@ useEffect(() => {
 
     fetchRequest();
 }, [id]);
-
+    
+    // Show the loading message
     if(!request){
         return(
-            <div>
-                <h1>Loading</h1>
+            <div className='p-8'>
+                <h1 className='text-xl font-semibold'>Loading request ...</h1>
             </div>
         )
     }
