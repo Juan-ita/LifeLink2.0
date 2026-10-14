@@ -1,28 +1,8 @@
-// import React from 'react'
-// import { useEffect, useState } from 'react'
 import { Button } from '../ui/button'
 
 import api from '@/services/api';
 
-function InventoryTable({inventory, setInventory}) {
-
-//     useEffect(() => {
-//         async function fetchInventory() {
-//           try {
-//             // Get this hospital's inventory from Django.
-//             const response = await api.get("inventory/");
-
-//              setInventory(response.data);
-//           } catch (error) {
-//              console.error("Failed to load inventory:", error);
-
-//              if (error.response?.data) {
-//                 console.error("Django error:", error.response.data);
-//           }
-//       }
-//    }
-//         fetchInventory();
-//     }, []);
+function InventoryTable({inventory, setInventory, onEdit}) {
 
 
     async function handleDelete(id) {
@@ -99,7 +79,9 @@ function InventoryTable({inventory, setInventory}) {
 
                            <div className='flex justify-between mt-2'>
                              <Button variant='outline'
-                                     size='sm'>
+                                     size='sm'
+                                     onClick={() => onEdit(item)}
+                                     >
                             Edit
                         </Button>
 

@@ -12,6 +12,7 @@ function BloodInventory() {
   const [bloodGroup, setBloodGroup] = useState("")
   const [units, setUnits] = useState("")
   const [expiryDate, setExpiryDate] = useState("")
+  const [editingId, setEditingId] = useState(null)
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -25,20 +26,30 @@ function BloodInventory() {
     }
 
     try {
-        // Send the inventory information to Django.
-        await api.post("inventory/", {
-            blood_group: bloodGroup.toUpperCase(),
-            units_available: Number(units),
-            expiry_date: expiryDate,
-        });
+        // Prepare the inventory information.
+        const inventoryData = {
+          blood_group: bloodGroup.toUpperCase(),
+          units_available:Number(units),
+          expiryDate: expiryDate || null,
 
-        alert("Blood added successfully!");
+        };
+        //If editingID exists, update the existing record.Otherwise, create m\a new inventory record
+        if (editingId !== null){
+          await api.patch(`inventory/${editingId}/`, inventoryData);
+          alert("Inventory uploaded sucessfully!")
+        } else{
+          await api.post("inventory/", inventoryData);
+          alert("Blood added successfully!")
+        }
 
-        // Clear the form.
+        // Clear the form and exit editing form
         setBloodGroup("");
         setUnits("");
         setExpiryDate("");
+        setEditingId(null);
 
+
+        // Refresh the table with the latest data
         await fetchInventory();
 
     } catch (error) {
@@ -65,6 +76,16 @@ function BloodInventory() {
   }
 
  }
+
+ // Load the selected inventory record into the form.
+   function handleEdit(item) {
+
+   setEditingId(item.id);
+   setBloodGroup(item.blood_group);
+   setUnits(String(item.units_available));
+   setExpiryDate(item.expiry_date || "");
+   }
+
 
  //Fetch inventory when the page firsts loads.
  useEffect(() => {
@@ -122,7 +143,7 @@ function BloodInventory() {
             </div>
 
             <Button type="submit" className="w-full">
-              Add Inventory
+              {editingId !== null ? "Update Inventory" : "Add Inventory"}
             </Button>
           </form>
         </CardContent>
@@ -131,6 +152,7 @@ function BloodInventory() {
        <InventoryTable 
           inventory ={inventory}
           setInventory={setInventory}
+          onEdit={handleEdit}
           />
     </HospitalLayout>
   )
