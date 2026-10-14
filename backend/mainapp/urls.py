@@ -45,4 +45,7 @@ urlpatterns = [
 
     # Users
     path("api/", include("users.urls")),
+
+    # Donor
+    path("api/donors/", include("Donors.urls")),
 ]
