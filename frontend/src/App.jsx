@@ -20,6 +20,7 @@ import HospitalDonors from './components/hospital/HospitalDonors'
 import HospitalNotifications from './components/hospital/HospitalNotifications'
 import DonorProfile from './components/donor/DonorProfile'
 import About from './components/About'
+import RegistrationSuccess from './pages/RegistrationSuccess'
 
 import ProtectedRoute from './components/protection/ProtectedRoute'
 
@@ -66,6 +67,8 @@ function App() {
           <Route path='/hospital/donors' element={<HospitalDonors/>}/>
           <Route path='/hospital/notifications' element={<HospitalNotifications/>}/>
           <Route path='/donor/profile' element={<DonorProfile/>}/>
+
+          <Route path='/registration-success' element={<RegistrationSuccess/>}/>
         </Routes>
     
     </>
