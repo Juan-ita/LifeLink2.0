@@ -26,13 +26,23 @@ function EditRequest() {
 
             const data = response.data;
 
-            // Fill the form with the request information.
-            setBloodGroup(data.blood_group);
-            setUnits(data.units_required);
-            setUrgency(data.urgency);
+        
+           // Fill the form with the existing request information.
+           setBloodGroup(data.blood_group ?? "");
+           setUnits(String(data.units_required ?? ""));
+           setUrgency(data.urgency ?? "");
+           
+           // Extract Patient, County and Deadline from the reason field.
+           const reason = data.reason ?? "";
+           
+           const patientMatch = reason.match(/Patient:\s*(.*?)\.\s*County:/);
+           const countyMatch = reason.match(/County:\s*(.*?)\.\s*Deadline:/);
+           const deadlineMatch = reason.match(/Deadline:\s*(\d{4}-\d{2}-\d{2})/);
+           
+           setPatientName(patientMatch?.[1] ?? "");
+           setCounty(countyMatch?.[1] ?? "");
+           setDeadline(deadlineMatch?.[1] ?? "");
 
-            // Patient, county and deadline are currently stored
-            // inside the reason field in our backend.
 
         } catch (error) {
             console.error("Failed to load blood request:", error);
@@ -55,6 +65,10 @@ function EditRequest() {
             blood_group: bloodGroup.toUpperCase(),
             units_required: Number(units),
             urgency: urgency.toUpperCase(),
+
+             // Save Patient, County and Deadline in the reason field.
+             reason: `Patient: ${patientName}. County: ${county}. Deadline: ${deadline}.`,
+         
         });
 
         alert("Blood request updated!");
