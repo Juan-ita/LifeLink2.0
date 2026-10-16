@@ -31,32 +31,37 @@ function RecentRequests() {
     fetchRequests();
     }, []);
 
-    async function handleDelete(id) {
-    if (!window.confirm("Are you sure you want to delete this request?")) {
-        return;
-    }
 
-    try {
-        // Delete the blood request from Django.
-        await api.delete(`blood-requests/${id}/`);
-
-        // Remove the deleted request from the screen.
-        setRequests(
-            requests.filter((request) => request.id !== id)
-        );
-
-        alert("Blood request deleted successfully!");
-
-    } catch (error) {
-        console.error("Failed to delete request:", error);
-
-        if (error.response?.data) {
-            console.error("Django error:", error.response.data);
+    async function handleCancel(id) {
+        if (!window.confirm("Are you sure you want to cancel this blood request?")) {
+            return;
         }
-
-        alert("Failed to delete request.");
+    
+        try {
+            // Send a cancellation request to the Django backend.
+            const response = await api.post(`blood-requests/${id}/cancel/`);
+    
+            // Update the request using the response returned by Django.
+            setRequests((previousRequests) =>
+                previousRequests.map((request) =>
+                    request.id === id ? response.data : request
+                )
+            );
+    
+            alert("Blood request cancelled successfully!");
+    
+        } catch (error) {
+            console.error("Failed to cancel request:", error);
+    
+            if (error.response?.data) {
+                console.error("Django error:", error.response.data);
+            }
+    
+            alert("Failed to cancel blood request.");
+        }
     }
- }
+
+
    
   return (
     <div className='mt-10 rounded-xl bg-white p-6 shadow-md'>
@@ -144,9 +149,13 @@ function RecentRequests() {
                         variant='destructive'
                         size='sm'
                         className="cursor-pointer bg-red-500 text-white shadow-md hover:bg-red-600"
-                        onClick={() => handleDelete(request.id)}
+                        onClick={() => handleCancel(request.id)}
+                        disable={
+                            request.status === "FULFILLED" ||
+                            request.status === "CANCELLED"
+                        }
                         >
-                            Delete
+                            Cancel
                         </Button>
 
                         <Button
