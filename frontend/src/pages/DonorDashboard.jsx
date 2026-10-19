@@ -1,11 +1,11 @@
 import DonorLayout from '@/components/donor/DonorLayout'
 import { Heart, Clipboard, CheckCircle, Clock, Calendar } from 'lucide-react'
 import DonorCards from '@/components/donor/DonorCards'
-import { db, auth } from '@/firebase/FirebaseConfig'
-import { getDocs, collection, doc, getDoc } from 'firebase/firestore'
 import { useState, useEffect } from 'react'
 import DonorQuickActions from '@/components/donor/DonorQuickActions'
 import EmergencyRequests from '@/components/donor/EmergencyRequests'
+
+import api from '@/services/api'
 
 function DonorDashboard() {
   const [donor, setDonor] = useState(null)
@@ -16,59 +16,41 @@ function DonorDashboard() {
     pending: 0,
 
   })
+useEffect(() => {
+  async function fetchStats() {
+    try {
+      // Fetch the logged-in user's profile from Django.
+      const profileResponse = await api.get('me/')
+      setDonor(profileResponse.data)
 
-  useEffect(()=>{
-    async function fetchStats(){
-      try {
-        //Get all blood requests
-        const requestSnapshot = await getDocs(
-          collection(db, "bloodRequests")
-        );
+      // Fetch blood requests available to the donor.
+      const requestsResponse = await api.get('blood-requests/')
 
-        //Get all appointments
-        const appointmentsSnapshots = await getDocs(
-          collection(db, "appointments")
-        );
+      const requests = Array.isArray(requestsResponse.data)
+        ? requestsResponse.data
+        : requestsResponse.data.results ?? []
 
-        //Get only this donor's appointment
-        const myAppointments = appointmentsSnapshots.docs.filter((doc)=>
-        doc.data().donorId === auth.currentUser.uid)
+      const approvedRequests = requests.filter(
+        request => request.status === 'APPROVED'
+      )
 
-        //Count approved appointments
-        const approved = myAppointments.filter(
-          (doc) => doc.data().status === "Approved"
-        )
-
-        //count pending appointments
-        const pending = myAppointments.filter(
-          (doc)=> doc.data().status=== "Pending"
-        ) 
-
-        setStats({
-          requests: requestSnapshot.size,
-          appointments: myAppointments.length,
-          approved: approved.length,
-          pending: pending.length,
-        })
-
-         const donorSnap = await getDoc(
-      doc(db, "users", auth.currentUser.uid)
-    )
-    if(donorSnap.exists()){
-      setDonor(donorSnap.data())
+      // Appointment statistics will be connected separately.
+      setStats(previous => ({
+        ...previous,
+        requests: approvedRequests.length,
+      }))
+    } catch (error) {
+      console.error('Failed to load donor dashboard:', error)
     }
-      }catch(error){
-        console.error(error)
-      }
-      
-    }
-    fetchStats()
-  }, [])
+  }
+
+  fetchStats()
+}, [])
   return (
     <DonorLayout>
         <main className='flex-1 p-8'>
          <h1 className='text-3xl font-bold'>
-            Welcome Back, {donor?.fullName}
+            Welcome Back, {donor?.username ?? "Donor"}
         </h1> 
          <p className='mt-2 text-gray-500'>
          Ready to make another life-saving donation?
