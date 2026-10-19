@@ -12,40 +12,59 @@ function DonorDashboard() {
   const [stats, setStats] = useState({
     requests: 0,
     appointments: 0,
-    approved: 0,
-    pending: 0,
+    scheduled: 0,
+    completed: 0,
 
   })
 useEffect(() => {
-  async function fetchStats() {
+  async function fetchDashboardData() {
     try {
-      // Fetch the logged-in user's profile from Django.
-      const profileResponse = await api.get('me/')
-      setDonor(profileResponse.data)
+      // Fetch the donor's profile, blood requests, and appointments from Django.
+      const [donorResponse, requestsResponse, appointmentsResponse] =
+        await Promise.all([
+          api.get("me/"),
+          api.get("blood-requests/"),
+          api.get("appointments/"),
+        ]);
 
-      // Fetch blood requests available to the donor.
-      const requestsResponse = await api.get('blood-requests/')
-
+      // Django may return a plain list or a paginated response.
       const requests = Array.isArray(requestsResponse.data)
         ? requestsResponse.data
-        : requestsResponse.data.results ?? []
+        : requestsResponse.data.results ?? [];
 
-      const approvedRequests = requests.filter(
-        request => request.status === 'APPROVED'
-      )
+      const appointments = Array.isArray(appointmentsResponse.data)
+        ? appointmentsResponse.data
+        : appointmentsResponse.data.results ?? [];
 
-      // Appointment statistics will be connected separately.
-      setStats(previous => ({
-        ...previous,
-        requests: approvedRequests.length,
-      }))
+      // Only count blood requests that donors can currently respond to.
+      const availableRequests = requests.filter(
+        (request) => request.status === "APPROVED"
+      );
+
+      // Count appointments using Django's Appointment.Status choices.
+      const scheduledAppointments = appointments.filter(
+        (appointment) => appointment.status === "SCHEDULED"
+      );
+
+      const completedAppointments = appointments.filter(
+        (appointment) => appointment.status === "COMPLETED"
+      );
+
+      setDonor(donorResponse.data);
+
+      setStats({
+        requests: availableRequests.length,
+        appointments: appointments.length,
+        scheduled: scheduledAppointments.length,
+        completed: completedAppointments.length,
+      });
     } catch (error) {
-      console.error('Failed to load donor dashboard:', error)
+      console.error("Could not load donor dashboard:", error);
     }
   }
 
-  fetchStats()
-}, [])
+  fetchDashboardData();
+}, []);
   return (
     <DonorLayout>
         <main className='flex-1 p-8'>
@@ -70,12 +89,12 @@ useEffect(() => {
         />
         <DonorCards
         title="Approved"
-        value={stats.approved}
+        value={stats.scheduled}
         icon={<CheckCircle  size={28}/>}
         />
         <DonorCards
         title="Pending"
-        value={stats.pending}
+        value={stats.completed}
         icon={<Clock size={28}/>}
         />
 
