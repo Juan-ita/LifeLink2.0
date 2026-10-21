@@ -9,7 +9,7 @@ const __dirname = path.dirname(__filename)
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: "/Lifelink2.0/",
+  base: "/LifeLink2.0/",
   resolve:{
     alias:{
       "@": path.resolve(__dirname, "./src")
