@@ -15,6 +15,8 @@ function EmergencyRequests() {
                 // Fetch approved blood requests from Django.
                 const response = await api.get('blood-requests/')
 
+                console.log("BLOOD REQUESTS RESPONSE:", response.data)
+
                 // Django returns the requests as a list.
                 const data = Array.isArray(response.data)
                     ? response.data
@@ -68,13 +70,17 @@ function EmergencyRequests() {
                 ) : (
                     requests.map(request => {
                         // Patient and county are currently stored in Django's reason field rather than separate database fields.
-                        const reason = request.reason ?? ''
+                        const reason = request.reason ?? "";
+
+                        // Extract the patient's name from the reason text.
                         const patientMatch = reason.match(
-                            /Patient:\s*(.*?)\.\s*County:/
-                        )
+                          /Patient:\s*(.*?)\.\s*County:/
+                        );
+                        
+                        // Extract the county from the reason text.
                         const countyMatch = reason.match(
-                            /County:\s*(.*?)\.\s*Deadline:/
-                        )
+                          /County:\s*(.*?)\.\s*Deadline:/
+                        );
 
                         return (
                             <div
