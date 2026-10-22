@@ -29,31 +29,6 @@ class BloodRequestViewSet(viewsets.ModelViewSet):
     # PUT/PATCH → update a request
     # DELETE → delete a request
 
-    # Choose permissions based on the action being performed
-    def get_permissions(self):
-
-        # Requesters can create new blood requests
-        if self.action == "create":
-            self.permission_classes = [IsHospitalUser]
-
-        # Hospitals can update requests, eg. approving them
-        elif self.action in ["update", "partial_update"]:
-            self.permission_classes = [IsHospitalUser]
-
-        # Any logged in user can view blood requests
-        else:
-            self.permission_classes = [IsAuthenticated]
-
-        # Create and return the permission objects
-        return [permission() for permission in self.permission_classes]
-
-    def perform_create(self, serializer):
-     # Get the hospital profile belonging to the logged-in user.
-     hospital = self.request.user.hospital_profile
- 
-     # Automatically attach this hospital to the blood request.
-     serializer.save(hospital=hospital)
-
     # Control which blood requests each role can see
     def get_queryset(self):
 
