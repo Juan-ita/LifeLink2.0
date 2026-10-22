@@ -14,9 +14,10 @@ from pathlib import Path
 import os
 
 # That's the address Vite normally uses for your React frontend.
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-] 
+CORS_ALLOWED_ORIGINS = os.environ.get(
+    "CORS_ALLOWED_ORIGINS",
+    "http://localhost:5173"
+).split(",")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,10 +27,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-@-^f34ofn!pg$ap99^0829yw-&vnz$bo$f%aw4%n(m1ut-o4ch'
+SECRET_KEY = os.environ.get("SECRET_KEY",'django-insecure-@-^f34ofn!pg$ap99^0829yw-&vnz$bo$f%aw4%n(m1ut-o4ch')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
 
 # Allow local development and Render's assigned service hostname.
 ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
