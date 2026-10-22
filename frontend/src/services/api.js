@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Base URL for our Django backend
-const BASE_URL = "https://lifelink-backend-bfxl.onrender.com/";
+const BASE_URL = "https://lifelink-backend-bfxl.onrender.com/api/";
 
 const api = axios.create({
     baseURL: BASE_URL,

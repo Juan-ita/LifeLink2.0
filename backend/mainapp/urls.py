@@ -48,4 +48,7 @@ urlpatterns = [
 
     # Donor
     path("api/donors/", include("Donors.urls")),
+
+    # Hospital
+    path("api/", include("hospitals.urls")),
 ]
