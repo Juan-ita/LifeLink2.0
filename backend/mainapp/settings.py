@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # That's the address Vite normally uses for your React frontend.
 CORS_ALLOWED_ORIGINS = [
@@ -30,7 +31,13 @@ SECRET_KEY = 'django-insecure-@-^f34ofn!pg$ap99^0829yw-&vnz$bo$f%aw4%n(m1ut-o4ch
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# Allow local development and Render's assigned service hostname.
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+
+RENDER_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+
+if RENDER_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_HOSTNAME)
 
 
 # Application definition
