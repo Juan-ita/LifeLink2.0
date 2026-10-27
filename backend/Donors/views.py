@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 
 from .models import DonorProfile
-from .serializers import DonorProfileSerializer
+from .serializers import DonorProfileSerializer, HospitalDonorSerializer
 
 
 class DonorProfileView(APIView):
@@ -92,3 +92,22 @@ class DonorAvailabilityView(APIView):
             "message": "Availability updated successfully.",
             "is_available": donor.is_available,
         })
+
+class HospitalDonorListView(APIView):
+     permission_classes = [IsAuthenticated]
+ 
+     def get(self, request):
+         # Only hospital accounts can access the donor directory.
+         if request.user.role != "HOSPITAL":
+             return Response(
+                 {"error": "Only hospital accounts can view registered donors."},
+                 status=status.HTTP_403_FORBIDDEN,
+             )
+ 
+         # Retrieve profiles linked to donor accounts only.
+         donors = DonorProfile.objects.filter(
+             user__role="DONOR"
+         ).select_related("user").order_by("user__username")
+ 
+         serializer = HospitalDonorSerializer(donors, many=True)
+         return Response(serializer.data)

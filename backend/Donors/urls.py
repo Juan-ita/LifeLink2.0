@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import DonorProfileView, DonorAvailabilityView
+from .views import DonorProfileView, DonorAvailabilityView, HospitalDonorListView
 
 urlpatterns = [
     path("me/", DonorProfileView.as_view(), name="donor-profile"),
@@ -8,4 +8,5 @@ urlpatterns = [
         DonorAvailabilityView.as_view(),
         name="donor-availability",
     ),
+    path("directory/", HospitalDonorListView.as_view(), name="hospital-donor-directory"),
 ]

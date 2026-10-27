@@ -131,7 +131,7 @@ function Login() {
              className="mt-2"
               id="password"
               type="password"
-              placeholder="Create a Password"
+              placeholder="Enter Password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}/>
           </div>
