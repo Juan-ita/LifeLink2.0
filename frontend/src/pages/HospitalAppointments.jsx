@@ -109,12 +109,41 @@ return ( <HospitalLayout> <main className="flex-1 p-6"> <h1 className="text-3xl 
             className="rounded-xl bg-white p-6 shadow-md"
           >
             <h2 className="text-xl font-bold">
-              Donor ID: {appointment.donor}
-            </h2>
+               {appointment.donor_name || `Donor ID: ${appointment.donor}`}
+              </h2>
+              
+              <p>Email: {appointment.donor_email || 'Not provided'}</p>
+              
+              <p>Phone: {appointment.donor_phone || 'Not provided'}</p>
 
-            <p className="mt-2 text-gray-700">
-              Blood request ID: {appointment.blood_request}
-            </p>
+
+              <div className="mt-3 space-y-1 text-gray-700">
+                <p>
+                  <strong>Recipient:</strong>{' '}
+                  {appointment.blood_request_details?.recipient_name || 'Name not provided'}
+                </p>
+              
+                <p>
+                  <strong>Requested blood group:</strong>{' '}
+                  {appointment.blood_request_details?.blood_group || 'Not specified'}
+                </p>
+              
+                <p>
+                  <strong>Units required:</strong>{' '}
+                  {appointment.blood_request_details?.units_required ?? 'Not specified'}
+                </p>
+              
+                <p>
+                  <strong>Urgency:</strong>{' '}
+                  {appointment.blood_request_details?.urgency || 'Not specified'}
+                </p>
+              
+                <p>
+                  <strong>Request ID:</strong> {appointment.blood_request ?? 'Not specified'}
+                </p>
+              </div>
+
+
 
             <p className="mt-2 text-gray-700">
               Appointment date: {formatDate(appointment.appointment_date)}

@@ -33,9 +33,12 @@ class BloodRequest(models.Model):
         related_name="blood_requests"
     )
     
+    # Name of the patient who needs blood
+    recipient_name = models.CharField(max_length=200, blank=True) 
+
     # Blood group required
-    blood_group = models.CharField(max_length=5)
-    
+    blood_group = models.CharField(max_length=5) 
+
     # Number of blood units required
     units_required = models.PositiveBigIntegerField()
     

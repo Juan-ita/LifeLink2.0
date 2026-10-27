@@ -14,6 +14,7 @@ class BloodRequestAdmin(admin.ModelAdmin):
         'hospital',
         'requester',
         'created_at',
+        'recipient_name',
     )
 
     # Allow administrators to filter blood requests
@@ -26,8 +27,9 @@ class BloodRequestAdmin(admin.ModelAdmin):
     # Allow admin to search blood requests
     search_fields = (
         'blood_group',
-        'hospital_name',
+        'hospital__hospital_name',
         'request_username',
+        'recipient__username'
     )
 
     # Display newest requests first

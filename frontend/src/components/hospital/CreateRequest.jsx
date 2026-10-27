@@ -51,6 +51,9 @@ try{
     // The hospital is identified automatically from the logged-in hospital account.
     await api.post("blood-requests/", {
 
+        // save the patient's name in its own database field.
+        recipient_name: patientName.trim(),
+
         //Blood group requested by the patient
         blood_group: bloodGroup.toUpperCase(),
 
