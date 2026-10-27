@@ -1,114 +1,134 @@
-import React from 'react'
-import { LayoutDashboard, Droplets, ClipboardList, User, Users, LogOut, Calendar } from 'lucide-react'
-import { Link } from 'react-router-dom'
-import { Bell } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
-import { auth, db } from '@/firebase/FirebaseConfig'
-import { signOut } from 'firebase/auth'
-import { collection, getDocs } from 'firebase/firestore'
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import {LayoutDashboard,Droplets,ClipboardList,User,Users,LogOut,Calendar,} from 'lucide-react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+import api from '@/services/api'
 
 function Sidebar() {
-    const navigate = useNavigate()
-     const [notificationCount, setNotificationCount] = useState(0)
+const navigate = useNavigate()
+const location = useLocation()
 
-  useEffect(() => {
-  async function loadNotifications() {
-    const querySnapshot = await getDocs(
-      collection(db, "appointments")
-    );
 
-    // Count unread appointments
-    const unreadAppointments = querySnapshot.docs.filter((doc) => {
-      const data = doc.data();
+const [notificationCount, setNotificationCount] = useState(0)
 
-      return data.notificationRead === false;
-    });
-
-    setNotificationCount(unreadAppointments.length);
-  }
-
-  loadNotifications();
-}, []);
-
-  async function handleLogout(){
-      const confirmLogout = window.confirm(
-        "Are you sure u want to log out?"
-      )
-      if(!confirmLogout){
-        return
-      }
+// Fetch hospital appointments and count those not yet read.
+useEffect(() => {
+    async function loadAppointments() {
         try {
-          await signOut(auth)
-          //remove locally stored userdata
-          localStorage.removeItem("user")
-  
-          alert("Logged out successfully");
-          navigate("/login")
-        }catch (error){
-          console.error(error);
-          alert("Failed to logout.")
+            const response = await api.get('appointments/')
+
+            // Support both regular arrays and paginated responses.
+            const appointments = Array.isArray(response.data)
+                ? response.data
+                : response.data.results ?? []
+
+            // Count appointments that have not been marked as read.
+            const unreadAppointments = appointments.filter(
+                (appointment) => appointment.notification_read === false
+            )
+
+            setNotificationCount(unreadAppointments.length)
+        } catch (error) {
+            console.error(
+                'Could not load hospital appointments:',
+                error.response?.data || error
+            )
         }
-      }
-  return (
-    <aside className='w-64 bg-red-700 text-white min-h-screen p-5 rounded-lg'>
-      <h2 className='text-2xl font-bold mb-10'>
-        LifeLink
-      </h2>
+    }
 
-      <nav className='space-y-3'>
-        <Link to="/hospital/dashboard" className='flex items-center gap-3 p-3 rounded hover:bg-red-800'>
-        <LayoutDashboard size={20}/>
-        Dashboard
-        </Link>
+    loadAppointments()
+}, [location.pathname])
 
-        <Link to="/hospital/inventory" className='flex items-center gap-3 p-3 rounded hover:bg-red-800'>
-        <Droplets size={20}/>
-        Blood Inventory
-        </Link>
+// Log out of the Django-authenticated application.
+function handleLogout() {
+    const confirmLogout = window.confirm(
+        'Are you sure you want to log out?'
+    )
 
-        <Link to="/hospital/appointments"
-        className='flex items-center gap-3 p-3 rounded hover:bg-red-800'>
-          <Calendar size={20}/>
-        Appointments
+    if (!confirmLogout) return
 
-        {/* Notification badge */}
-           {notificationCount > 0 && (
-            <span className='rounded-full bg-white px-2 py-1 text-xs font-bold text-red-600'>
-              {notificationCount}
-            </span>
-           )}
-        </Link>
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('refresh_token')
+    localStorage.removeItem('user_role')
+    localStorage.removeItem('user')
 
-        <Link to="/hospital/create-request" className='flex items-center gap-3 p-3 rounded hover:bg-red-800'>
-        <ClipboardList size={20}/>
-        Request Blood
-        </Link>
+    navigate('/login')
+}
 
-        <Link to="/hospital/notifications" className='flex items-center gap-3 p-3 rounded hover:bg-red-800'>
-        <Bell size={20}/>
-        Notifications
-        </Link>
+return (
+    <aside className="w-64 min-h-screen rounded-lg bg-red-700 p-5 text-white">
+        <h2 className="mb-10 text-2xl font-bold">
+            LifeLink
+        </h2>
 
-        <Link to="/hospital/donors" className='flex items-center gap-3 p-3 rounded hover:bg-red-800'>
-        <Users/>
-        Donors
-        </Link>
+        <nav className="space-y-3">
+            <Link
+                to="/hospital/dashboard"
+                className="flex items-center gap-3 rounded p-3 hover:bg-red-800"
+            >
+                <LayoutDashboard size={20} />
+                Dashboard
+            </Link>
 
-        <Link to="/hospital/profile" className='flex items-center gap-3 p-3 rounded hover:bg-red-800'>
-        <User/>
-        Profile
-        </Link>
+            <Link
+                to="/hospital/inventory"
+                className="flex items-center gap-3 rounded p-3 hover:bg-red-800"
+            >
+                <Droplets size={20} />
+                Blood Inventory
+            </Link>
 
-        <button 
-        onClick={handleLogout}
-        className='flex items-center gap-3 p-3 rounded hover:bg-red-800 w-full text-left'>
-            <LogOut size={20}/>
-            logout
-        </button>
-      </nav>
+            <Link
+                to="/hospital/appointments"
+                className="flex items-center justify-between gap-3 rounded p-3 hover:bg-red-800"
+            >
+                <span className="flex items-center gap-3">
+                    <Calendar size={20} />
+                    Appointments
+                </span>
+
+                {notificationCount > 0 && (
+                    <span className="rounded-full bg-white px-2 py-1 text-xs font-bold text-red-600">
+                        {notificationCount}
+                    </span>
+                )}
+            </Link>
+
+            <Link
+                to="/hospital/create-request"
+                className="flex items-center gap-3 rounded p-3 hover:bg-red-800"
+            >
+                <ClipboardList size={20} />
+                Request Blood
+            </Link>
+
+            <Link
+                to="/hospital/donors"
+                className="flex items-center gap-3 rounded p-3 hover:bg-red-800"
+            >
+                <Users size={20} />
+                Donors
+            </Link>
+
+            {/* <Link
+                to="/hospital/profile"
+                className="flex items-center gap-3 rounded p-3 hover:bg-red-800"
+            >
+                <User size={20} />
+                Profile
+            </Link> */}
+
+            <button
+                onClick={handleLogout}
+                className="flex w-full items-center gap-3 rounded p-3 text-left hover:bg-red-800"
+            >
+                <LogOut size={20} />
+                Logout
+            </button>
+        </nav>
     </aside>
-  )
+)
+
+
 }
 
 export default Sidebar
