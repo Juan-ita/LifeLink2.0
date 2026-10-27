@@ -24,7 +24,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
           # HospitalProfile is linked to appointments through hospital.
           # Confirm the actual user relationship in your HospitalProfile model.
           return Appointment.objects.filter(
-              hospital__hospital_user=user
+              hospital__user=user
           ).order_by("-created_at")
   
       if user.role == "DONOR":

@@ -1,140 +1,175 @@
-import React from 'react'
 import { useEffect, useState } from 'react'
-import { getDocs, collection } from 'firebase/firestore'
-import { db } from '@/firebase/FirebaseConfig'
 import HospitalLayout from '@/components/hospital/HospitalLayout'
 import { Button } from '@/components/ui/button'
-import { doc, updateDoc } from 'firebase/firestore'
+import api from '@/services/api'
 
 function HospitalAppointments() {
-  const [appointments, setAppointments] = useState([]);
+const [appointments, setAppointments] = useState([])
+const [loading, setLoading] = useState(true)
+const [updatingId, setUpdatingId] = useState(null)
 
-  async function updateAppointmentStatus(id, status){
-    try{
-      //find the appointment document
-      const appointmentRef = doc(db, "appointments", id)
-
-      //update its status
-      await updateDoc(appointmentRef, {
-        status: status,
-      });
-
-      //update the page without refreshing
-      setAppointments((previousAppointments) => previousAppointments.map((appointment) =>
-        appointment.id === id ?{...appointment, status: status}
-        :appointment
-      
-      ))
-      alert(`Appointment ${status}!`)
-    }catch (error){
-      console.error(error);
-      alert("Failed to update appointment.")
-    }
-  }
-
-  useEffect(() => {
-    async function fetchAppointments(){
-
-      //Read every appointment
-      const querySnapshot = await getDocs(
-        collection(db, "appointments")
-      );
-
-      //convert firebase documents into a normal array
-      const data = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      for (const appointment of data) {
-  if (!appointment.notificationRead) {
-    await updateDoc(
-      doc(db, "appointments", appointment.id),
-      {
-        notificationRead: true,
-      }
-    );
-
-    appointment.notificationRead = true;
-  }
+// Load appointments belonging to the logged-in hospital.
+async function fetchAppointments() {
+try {
+   const response = await api.get('appointments/')
+   const data = Array.isArray(response.data)
+   ? response.data
+   : response.data.results ?? []
+   
+   
+     setAppointments(data)
+} catch (error) {
+  console.error(
+    'Could not load hospital appointments:',
+    error.response?.data || error
+  )
+  alert('Could not load appointments. Please check your login and try again.')
+} finally {
+  setLoading(false)
 }
 
-      setAppointments(data);
-    }
-    fetchAppointments()
-  }, [])
-  return (
-    <HospitalLayout>
-      <h1 className='text-3xl font-bold'>
-        Donor Appointments
-      </h1>
 
-      <div className='mt-8 space-y-5'>
-        {appointments.length === 0? (
-          <div className='rounded-xl bg-white p-6 text-center shadow-md'>
-            No appointments found
-          </div>
-        ):(
-          appointments.map((appointment) => (
-            <div 
-            key={appointment.id}
-            className='rounded-xl bg-white p-6 shadow-md'>
-              <h2 className='text-xl font-bold'>
-               Donor: {appointment.donorName}
-              </h2>
-              <p className='text-gray-700 flex'>
-                  {appointment.patientName}
-                  </p>
+}
 
-                  <p className='mt-3 font-semibold text-red-600 flex gap-2'>
-                    <h2 className='font-black text-black'>Recipient's Blood Group:</h2> {appointment.bloodGroup}
-                  </p>
-                  
-                  <p className='flex'>
-                     <h2 className='font-black'>Date:</h2>{appointment.appointmentDate}
-                  </p>
+useEffect(() => {
+ fetchAppointments()
+}, [])
 
-                  <p className='flex'>
-                    <h2 className='font-black'>Time:</h2> {appointment.appointmentTime}
-                  </p>
+// Approve or reject a booking using the Django API.
+async function updateAppointmentStatus(id, decision) {
+setUpdatingId(id)
 
-                  <span className={`mt-3 inline-block rounded-full px-3 py-1 text-sm ${
-                    appointment.status === "Pending"
-                    ?"bg-yellow-100 text-yellow-700"
-                    :appointment.status === "Approved"
-                    ?"bg-green-100 text-green-700"
-                    :"bg-red-100 text-red-500"
-                  }`}>
-                    {appointment.status}
-                  </span>
 
-                  {appointment.status === "Pending" && (
-                     <div className='flex gap-3'>
-                      <Button
-                      size='sm'
-                      className="bg-green-600 hover:bg-green-700"
-                      onClick={() => updateAppointmentStatus(appointment.id, "Approved")}
-                      >
-                        Approve
-                      </Button>
+try {
+  const endpoint = decision === 'approve' ? 'approve/' : 'reject/'
 
-                      <Button
-                      size='sm'
-                      variant='destructive'
-                      onClick={()=>updateAppointmentStatus(appointment.id, "Rejected")}
-                      >
-                        Reject
-                      </Button>
-                    </div>
-                  )}
+  const response = await api.post(`appointments/${id}/${endpoint}`)
 
-                 
-            </div>
-          ))
-        )}
-      </div>
-  </HospitalLayout>
+  // Update the displayed appointment with the backend response.
+  setAppointments((previous) =>
+    previous.map((appointment) =>
+      appointment.id === id ? response.data : appointment
+    )
   )
+
+  alert(
+    decision === 'approve'
+      ? 'Appointment approved!'
+      : 'Appointment rejected.'
+  )
+} catch (error) {
+  console.error(
+    'Could not update appointment:',
+    error.response?.data || error
+  )
+
+  const detail = error.response?.data?.detail
+  alert(detail || 'Could not update the appointment. Please try again.')
+} finally {
+  setUpdatingId(null)
+}
+
+
+}
+
+// Convert Django's ISO date into a readable date and time.
+function formatDate(value) {
+if (!value) return 'Not specified'
+
+
+const date = new Date(value)
+
+if (Number.isNaN(date.getTime())) return value
+
+return date.toLocaleString()
+
+
+}
+
+return ( <HospitalLayout> <main className="flex-1 p-6"> <h1 className="text-3xl font-bold">Donor Appointments</h1>
+
+
+    <p className="mt-2 text-gray-500">
+      Review donor bookings and confirm appointments.
+    </p>
+
+    <div className="mt-8 space-y-5">
+      {loading ? (
+        <div className="rounded-xl bg-white p-6 text-center shadow-md">
+          Loading appointments...
+        </div>
+      ) : appointments.length === 0 ? (
+        <div className="rounded-xl bg-white p-6 text-center shadow-md">
+          No appointments found.
+        </div>
+      ) : (
+        appointments.map((appointment) => (
+          <div
+            key={appointment.id}
+            className="rounded-xl bg-white p-6 shadow-md"
+          >
+            <h2 className="text-xl font-bold">
+              Donor ID: {appointment.donor}
+            </h2>
+
+            <p className="mt-2 text-gray-700">
+              Blood request ID: {appointment.blood_request}
+            </p>
+
+            <p className="mt-2 text-gray-700">
+              Appointment date: {formatDate(appointment.appointment_date)}
+            </p>
+
+            <span
+              className={`mt-3 inline-block rounded-full px-3 py-1 text-sm ${
+                appointment.status === 'PENDING'
+                  ? 'bg-yellow-100 text-yellow-700'
+                  : appointment.status === 'SCHEDULED'
+                    ? 'bg-green-100 text-green-700'
+                    : appointment.status === 'COMPLETED'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'bg-red-100 text-red-600'
+              }`}
+            >
+              {appointment.status}
+            </span>
+
+            {appointment.status === 'PENDING' && (
+              <div className="mt-4 flex gap-3">
+                <Button
+                  size="sm"
+                  className="bg-green-600 hover:bg-green-700"
+                  disabled={updatingId === appointment.id}
+                  onClick={() =>
+                    updateAppointmentStatus(appointment.id, 'approve')
+                  }
+                >
+                  {updatingId === appointment.id
+                    ? 'Updating...'
+                    : 'Approve'}
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  disabled={updatingId === appointment.id}
+                  onClick={() =>
+                    updateAppointmentStatus(appointment.id, 'reject')
+                  }
+                >
+                  Reject
+                </Button>
+              </div>
+            )}
+          </div>
+        ))
+      )}
+    </div>
+  </main>
+</HospitalLayout>
+
+
+)
 }
 
 export default HospitalAppointments
