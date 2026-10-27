@@ -1,27 +1,26 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
-
 class IsHospitalOrDonor(BasePermission):
-    """
-    Allow hospitals to manage appointments.
-    Allow donors to view appointments.
-    """
+  """
+  Allow hospitals to manage appointments.
+  Allow donors to view appointments and create their own.
+  """
 
-    def has_permission(self, request, view):
 
-        # Hospital users can perform all appointment actions
-        if (
-            request.user.is_authenticated
-            and request.user.role == "HOSPITAL"
-        ):
-            return True
-
-        # Donor users can only view appointments
-        if (
-            request.user.is_authenticated
-            and request.user.role == "DONOR"
-            and request.method in SAFE_METHODS
-        ):
-            return True
-
+def has_permission(self, request, view):
+    # Reject unauthenticated users.
+    if not request.user.is_authenticated:
         return False
+
+    # Hospitals can access appointment actions.
+    if request.user.role == "HOSPITAL":
+        return True
+
+    # Donors can view appointments and submit bookings.
+    if request.user.role == "DONOR":
+        return (
+            request.method in SAFE_METHODS
+            or request.method == "POST"
+        )
+
+    return False

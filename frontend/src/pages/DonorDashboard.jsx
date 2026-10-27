@@ -51,6 +51,10 @@ useEffect(() => {
         (appointment) => appointment.status === "COMPLETED"
       );
 
+      const cancelledAppointments = appointments.filter(
+        (appointment) => appointment.status === "CANCELLED"
+      );
+
       setDonor(donorResponse.data);
 
       setStats({
@@ -58,7 +62,7 @@ useEffect(() => {
         appointments: appointments.length,
         scheduled: scheduledAppointments.length,
         completed: completedAppointments.length,
-      });
+        });
     } catch (error) {
       console.error("Could not load donor dashboard:", error);
     }
@@ -89,12 +93,12 @@ useEffect(() => {
         icon={<Calendar size={28}/>}
         />
         <DonorCards
-        title="Approved"
+        title="Scheduled"
         value={stats.scheduled}
         icon={<CheckCircle  size={28}/>}
         />
         <DonorCards
-        title="Pending"
+        title="Completed"
         value={stats.completed}
         icon={<Clock size={28}/>}
         />
