@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { LayoutDashboard, Droplets, Calendar, User, LogOut } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import api from '@/services/api'
@@ -6,20 +6,18 @@ import api from '@/services/api'
 function DonorSidebar() {
 const [notificationCount, setNotificationCount] = useState(0)
 const navigate = useNavigate()
+const location = useLocation()
 
-// Load unread notifications belonging to the logged-in donor.
+// Refresh the unread notification count whenever the donor changes pages.
 useEffect(() => {
 async function loadNotifications() {
 try {
 const response = await api.get('notifications/')
 
-
-    // Support both normal arrays and paginated Django responses.
     const notifications = Array.isArray(response.data)
       ? response.data
       : response.data.results ?? []
 
-    // Count only notifications the donor has not read yet.
     const unreadNotifications = notifications.filter(
       (notification) => notification.is_read === false
     )
@@ -35,8 +33,7 @@ const response = await api.get('notifications/')
 
 loadNotifications()
 
-
-}, [])
+}, [location.pathname])
 
 // Log out using the JWT-based Django authentication setup.
 async function handleLogout() {

@@ -14,6 +14,9 @@ async function fetchAppointments() {
         setError('')
 
         const response = await api.get('appointments/')
+
+        // Mark all donor notifications as read when opening this page.
+        await api.post('notifications/mark-all-read/')
         const data = Array.isArray(response.data)
             ? response.data
             : response.data.results || []

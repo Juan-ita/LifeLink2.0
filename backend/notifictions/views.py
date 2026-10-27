@@ -1,6 +1,9 @@
 from django.shortcuts import render
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.decorators import action
+
 
 from .models import Notification
 from .serializers import NotificationSerializer
@@ -36,9 +39,11 @@ class NotificationViewSet(viewsets.ModelViewSet):
 
 
     def perform_update(self, serializer):
+        # Allow users to mark only their own notifications as read.
+        notification = self.get_object()
 
         # Save changes such as marking a notification as read
-        serializer.save()
+        serializer.save(user=notification.user)
 
     def destroy(self, request, *args, **kwargs):
 
@@ -46,3 +51,13 @@ class NotificationViewSet(viewsets.ModelViewSet):
         raise PermissionDenied(
             "Notifations cannot be deleted."
         )
+
+    @action(detail=False, methods=["post"], url_path="mark-all-read")
+    def mark_all_read(self, request):
+        # Mark only the logged-in user's notifications as read.
+        updated_count = self.get_queryset().filter(is_read=False).update(is_read=True)
+    
+        return Response({
+            "message": "Notifications marked as read.",
+            "updated_count": updated_count
+        })
