@@ -8,10 +8,12 @@ from blood_requests.models import BloodRequest
 class Appointment(models.Model):
 
     class Status(models.TextChoices):
-        SCHEDULED = "SCHEDULED", "Scheduled"
-        COMPLETED = "COMPLETED", "Completed"
-        CANCELLED = "CANCELLED", "Cancelled"
-        MISSED = "MISSED", "Missed"
+      PENDING = "PENDING", "Pending Approval"
+      SCHEDULED = "SCHEDULED", "Scheduled"
+      COMPLETED = "COMPLETED", "Completed"
+      CANCELLED = "CANCELLED", "Cancelled"
+      MISSED = "MISSED", "Missed"
+
 
     # Donor attending the appointment
     donor = models.ForeignKey(
@@ -41,7 +43,7 @@ class Appointment(models.Model):
     status = models.CharField(
         max_length=20,
         choices=Status.choices,
-        default=Status.SCHEDULED,
+        default=Status.PENDING,
     )
 
     # Optional notes from the hospital   Adding additional information
