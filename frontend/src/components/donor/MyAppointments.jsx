@@ -1,148 +1,178 @@
-import React from 'react'
-import { useEffect, useState } from 'react'
-import { auth, db } from '@/firebase/FirebaseConfig'
-import { collection, getDocs, doc, updateDoc} from 'firebase/firestore'
+import React, { useEffect, useState } from 'react'
+import api from '@/services/api'
 import DonorLayout from './DonorLayout'
 
 function MyAppointments() {
-    //store the donor's appointment
-    const [appointments, setAppointments] = useState([]);
+const [appointments, setAppointments] = useState([])
+const [loading, setLoading] = useState(true)
+const [error, setError] = useState('')
 
-    useEffect (() => {
-        async function fetchAppointments(){
-            //Get all appiontments
-         const querySnapshot = await getDocs (
-            collection(db, "appointments")
-         );
 
-         //Keep only the logged in donor's appointment
-         const data = querySnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-         }))
-         .filter(
-            (appointment)=> appointment.donorId === auth.currentUser.uid
-         );
+// Load appointments belonging to the logged-in donor from Django.
+async function fetchAppointments() {
+    try {
+        setError('')
 
-         //Mark notifications as read
-         for (const appointment of data){
-            if(!appointment.notificationRead){
-                await updateDoc(
-                    doc(db, "appointments", appointment.id),
-                    {
-                        notificationRead: true,
-                    }
-                )
-                //update local object
-                appointment.notificationRead = true;
-            }
-         }
+        const response = await api.get('appointments/')
+        const data = Array.isArray(response.data)
+            ? response.data
+            : response.data.results || []
 
-         //save appointments
-         setAppointments(data)
-        }
-        fetchAppointments()
-         
-    }, []);
+        setAppointments(data)
+    } catch (err) {
+        console.error('Failed to load appointments:', err.response?.data || err)
+        setError(
+            err.response?.data?.detail ||
+            'Could not load your appointments. Please try again.'
+        )
+    } finally {
+        setLoading(false)
+    }
+}
 
-     async function cancelAppointment(id){
-            const confirmCancel = window.confirm(
-                "Are you sure you want to cancel this appointment?"
-            )
-            if(!confirmCancel)return;
+useEffect(() => {
+    fetchAppointments()
+}, [])
 
-            try{
-                await updateDoc(doc(db, "appointments", id), {
-                    status: "Cancelled",
-                })
+// Cancel a pending appointment through Django.
+async function cancelAppointment(id) {
+    const confirmed = window.confirm(
+        'Are you sure you want to cancel this appointment?'
+    )
 
-                //Update the page immediately
-                setAppointments((previousAppointments) => 
-                previousAppointments.map((appointment) => appointment.id === id
-               ?{...appointment, status: "Cancelled"}
-                 : appointment)
-                )
-                
-                 alert("Appointment cancelled successfully.")
-            } catch (error){
-                console.error(error);
-                alert ("Failed to cancel appointment.")
-            }
-        }
-  return (
+    if (!confirmed) return
+
+    try {
+        // The backend must expose this action before cancellation can work.
+        await api.post(`appointments/${id}/cancel/`)
+
+        await fetchAppointments()
+        alert('Appointment cancelled successfully.')
+    } catch (err) {
+        console.error('Failed to cancel appointment:', err.response?.data || err)
+        alert(
+            err.response?.data?.detail ||
+            'Could not cancel this appointment.'
+        )
+    }
+}
+
+// Display readable appointment statuses.
+function getStatusStyle(status) {
+    switch (status) {
+        case 'PENDING':
+            return 'bg-yellow-100 text-yellow-700'
+        case 'SCHEDULED':
+            return 'bg-green-100 text-green-700'
+        case 'COMPLETED':
+            return 'bg-blue-100 text-blue-700'
+        case 'CANCELLED':
+        case 'MISSED':
+            return 'bg-red-100 text-red-700'
+        default:
+            return 'bg-gray-100 text-gray-700'
+    }
+}
+
+if (loading) {
+    return (
+        <DonorLayout>
+            <p>Loading your appointments...</p>
+        </DonorLayout>
+    )
+}
+
+return (
     <DonorLayout>
-      <h1 className='text-3xl font-bold'>
-        My Appointments 
-      </h1>
+        <h1 className="text-3xl font-bold">My Appointments</h1>
 
-      <div className='mt-8 space-y-5'>
-        {appointments.length === 0? (
-            <p className='text-gray-500'> 
-                You have no appointments
+        {error && (
+            <p className="mt-4 rounded-lg bg-red-100 p-4 text-red-700">
+                {error}
             </p>
-        ): (
-            appointments.map((appointment) => (
-                <div 
-                key={appointment.id}
-                className='rounded-xl bg-white p-6 shadow'
-                >
+        )}
 
-                    {/* patient */}
-                    <h2 className='text-xl font-bold'>
-                        {appointment.patientName}
-                    </h2>
-
-                    {/* Blood group */}
-                    <p className='text-red-600 font-semibold'>
-                        {appointment.bloodGroup}
-                    </p>
-
-                    {/* Date */}
-                    <p className='mt-2'>
-                        {appointment.appointmentDate}
-                    </p>
-
-                    {/* Time */}
-                    <p>
-                        {appointment.appointmentTime}
-                    </p>
-
-                    <span 
-                    className={`mt-4 inline-block rounded-full px-3 py-1 text-sm ${
-                        appointment.satus === "Pending"
-                        ?"bg-yellow-100 text-yellow-700"
-                        :appointment.satus === "Approved"
-                        ?"bg-green-100 text-green-700"
-                        :"bg-red-100 text-red-700"
-                    }`}
+        <div className="mt-8 space-y-5">
+            {!error && appointments.length === 0 ? (
+                <p className="text-gray-500">
+                    You have no appointments yet.
+                </p>
+            ) : (
+                appointments.map((appointment) => (
+                    <div
+                        key={appointment.id}
+                        className="rounded-xl bg-white p-6 shadow"
                     >
-                        {appointment.status}
-                    </span>
+                        <h2 className="text-xl font-bold">
+                            {appointment.hospital_name || 'Hospital appointment'}
+                        </h2>
 
-                    {/* Hospital message */}
-                    <p className='mt-4 text-sm text-gray-600'>
-                        {appointment.status === "Approved"
-                        ? "Your appointment has been approved. Please arrive 15 minutes early."
-                        :appointment.status === "Rejected"
-                        ? "Unfortunately your appointment was not approved. Thank you for volunteering."
-                        :"Your appointment is awaiting hospital approval." 
-                         }
-                        {appointment.status === "Pending" && (
-                            <button 
-                            onClick={() => cancelAppointment(appointment.id)}
-                            className='mt-4 rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700'
+                        <p className="mt-2">
+                            <strong>Blood group:</strong>{' '}
+                            {appointment.donor_blood_group || 'Not specified'}
+                        </p>
+
+                        <p>
+                            <strong>Date and time:</strong>{' '}
+                            {appointment.appointment_date
+                                ? new Date(appointment.appointment_date).toLocaleString()
+                                : 'Not specified'}
+                        </p>
+
+                        <p className="mt-3">
+                            <strong>Recipient:</strong>{' '}
+                            {appointment.blood_request_details?.recipient_name ||
+                                'Not provided'}
+                        </p>
+
+                        <p>
+                            <strong>Requested blood group:</strong>{' '}
+                            {appointment.blood_request_details?.blood_group ||
+                                'Not specified'}
+                        </p>
+
+                        <p>
+                            <strong>Units required:</strong>{' '}
+                            {appointment.blood_request_details?.units_required ??
+                                'Not specified'}
+                        </p>
+
+                        <span
+                            className={`mt-4 inline-block rounded-full px-3 py-1 text-sm ${getStatusStyle(appointment.status)}`}
+                        >
+                            {appointment.status || 'UNKNOWN'}
+                        </span>
+
+                        <p className="mt-4 text-sm text-gray-600">
+                            {appointment.status === 'SCHEDULED'
+                                ? 'Your appointment has been approved. Please contact the hospital if you need to confirm the arrangements.'
+                                : appointment.status === 'PENDING'
+                                ? 'Your appointment is awaiting hospital approval.'
+                                : appointment.status === 'CANCELLED'
+                                ? 'This appointment has been cancelled.'
+                                : appointment.status === 'COMPLETED'
+                                ? 'This appointment has been completed. Thank you for donating!'
+                                : appointment.status === 'MISSED'
+                                ? 'This appointment was marked as missed.'
+                                : 'Check with the hospital for further details.'}
+                        </p>
+
+                        {appointment.status === 'PENDING' && (
+                            <button
+                                onClick={() => cancelAppointment(appointment.id)}
+                                className="mt-4 rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700"
                             >
                                 Cancel Appointment
                             </button>
                         )}
-                      
-                    </p>
-                </div>
-            ))
-        )}
-      </div>
+                    </div>
+                ))
+            )}
+        </div>
     </DonorLayout>
-  )
+)
+
+
 }
 
 export default MyAppointments
