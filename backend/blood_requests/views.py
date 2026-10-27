@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 
 from users.models import User
+from notifictions.models import Notification
 
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -110,9 +111,45 @@ class BloodRequestViewSet(viewsets.ModelViewSet):
             serializer.save(hospital=user.hospital_profile)
     
     def update(self, request, *args, **kwargs):
-            # Check permissions before updating a request.
-            self.check_hospital_permission()
-            return super().update(request, *args, **kwargs)
+        # Only authorized hospital users and admins may update requests.
+        self.check_hospital_permission()
+    
+        # Retrieve the existing request before applying changes.
+        blood_request = self.get_object()
+        previous_status = blood_request.status
+    
+        # Save the requested changes.
+        response = super().update(request, *args, **kwargs)
+    
+        # Notify donors only when the request changes from PENDING to APPROVED.
+        if (
+            previous_status == BloodRequest.Status.PENDING
+            and blood_request.status == BloodRequest.Status.APPROVED
+        ):
+            # Find the hospital name for the notification.
+            hospital_name = blood_request.hospital.hospital_name
+    
+            # Notify registered donors.
+            donors = User.objects.filter(role=User.Role.DONOR)
+    
+            notifications = [
+                Notification(
+                    user=donor,
+                    notification_type=Notification.NotificationType.BLOOD_REQUEST,
+                    message=(
+                        f"A blood request from {hospital_name} "
+                        f"for blood group {blood_request.blood_group} "
+                        "has been approved and is available."
+                    ),
+                )
+                for donor in donors
+            ]
+    
+            # Create all notifications together.
+            Notification.objects.bulk_create(notifications)
+    
+        return response
+
     
     def partial_update(self, request, *args, **kwargs):
             # Check permissions before partially updating a request.
