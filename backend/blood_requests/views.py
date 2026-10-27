@@ -36,7 +36,11 @@ class BloodRequestViewSet(viewsets.ModelViewSet):
 
         if user.role == User.Role.DONOR:
           return BloodRequest.objects.filter(
-              status=BloodRequest.Status.APPROVED
+               status__in=[
+                    BloodRequest.Status.PENDING,
+                    BloodRequest.Status.APPROVED,
+               ]
+              
           ).order_by("-created_at")
       
         # Admin can see all blood requests

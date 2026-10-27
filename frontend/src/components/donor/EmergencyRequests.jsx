@@ -23,10 +23,12 @@ function EmergencyRequests() {
                     : response.data.results ?? []
 
                 // Show only the three most recent approved requests.
-                setRequests(
-                    data
-                        .filter(request => request.status === 'APPROVED')
-                        .slice(0, 3)
+               setRequests(
+                data
+                .filter(request =>
+                ['PENDING', 'APPROVED'].includes(request.status)
+                )
+                .slice(0, 3)
                 )
             } catch (error) {
                 console.error('Failed to load emergency requests:', error)
@@ -65,7 +67,7 @@ function EmergencyRequests() {
                     </p>
                 ) : requests.length === 0 ? (
                     <p className="text-gray-500">
-                        No approved blood requests are available right now.
+                        No  blood requests are available right now.
                     </p>
                 ) : (
                     requests.map(request => {

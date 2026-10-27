@@ -38,7 +38,8 @@ useEffect(() => {
 
       // Only count blood requests that donors can currently respond to.
       const availableRequests = requests.filter(
-        (request) => request.status === "APPROVED"
+        request => ['PENDING', 'APPROVED'].includes(request.status)
+
       );
 
       // Count appointments using Django's Appointment.Status choices.
