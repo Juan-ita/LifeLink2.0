@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
+
 import os
 
 # That's the address Vite normally uses for your React frontend.
@@ -168,4 +170,18 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
     ),
+
+
 }
+# Configure JWT token expiration times.
+SIMPLE_JWT = {
+    # Access token lasts 30 minutes.
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
+
+    # Refresh token lasts 7 days.
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+
+    # Issue a new access token using a valid refresh token.
+    "ROTATE_REFRESH_TOKENS": False,
+}
+
