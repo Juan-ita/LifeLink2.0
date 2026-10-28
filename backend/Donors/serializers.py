@@ -9,28 +9,28 @@ class DonorProfileSerializer(serializers.ModelSerializer):
   )
 
 
-class Meta:
-    model = DonorProfile
-    fields = [
-        "id",
-        "username",
-        "blood_group",
-        "date_of_birth",
-        "phone",
-        "latitude",
-        "longitude",
-        "is_available",
-        "last_donation_date",
-        "next_eligible_date",
-        "updated_at",
-    ]
-
-    read_only_fields = [
-        "id",
-        "username",
-        "updated_at",
-    ]
-
+  class Meta:
+      model = DonorProfile
+      fields = [
+          "id",
+          "username",
+          "blood_group",
+          "date_of_birth",
+          "phone",
+          "latitude",
+          "longitude",
+          "is_available",
+          "last_donation_date",
+          "next_eligible_date",
+          "updated_at",
+      ]
+  
+      read_only_fields = [
+          "id",
+          "username",
+          "updated_at",
+      ]
+  
 class HospitalDonorSerializer(serializers.ModelSerializer):
  # Include the username and email from the linked user account.
  username = serializers.CharField(
@@ -43,20 +43,22 @@ class HospitalDonorSerializer(serializers.ModelSerializer):
      source="user.email",
      read_only=True,
  )
- 
-class Meta:
-    model = DonorProfile
-    fields = [
-        "id",
-        "username",
-        "email",
-        "blood_group",
-        "phone",
-        "latitude",
-        "longitude",
-        "is_available",
-        "last_donation_date",
-        "next_eligible_date",
-    ]
+
 
  
+ class Meta:
+     model = DonorProfile
+     fields = [
+         "id",
+         "username",
+         "email",
+         "blood_group",
+         "phone",
+         "latitude",
+         "longitude",
+         "is_available",
+         "last_donation_date",
+         "next_eligible_date",
+     ]   
+ 
+  
