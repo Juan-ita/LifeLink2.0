@@ -4,7 +4,6 @@ LifeLink 2.0 is a capstone project about making blood donation easier to coordin
 
 The planned stack is a React and Vite frontend with a Django REST Framework backend. The project context also mentions JWT login and SQLite for local development.
 
-> **About this README:** I couldn’t see the application code in the project folder available to me. The feature list and API routes below come from the project context and earlier discussion, so please check them against your code before submitting. I’ve left out setup commands and configuration names that I couldn’t verify.
 
 ## What the project aims to do
 
